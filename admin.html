@@ -24,12 +24,16 @@
         
         .theme-toggle { position:absolute; top:0; right:0; cursor:pointer; width:30px; height:30px; transition: 0.3s; z-index: 15;}
         
-        input { width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--input-bg); color:var(--accent); font-weight: bold; outline: none; box-sizing: border-box; transition: 0.3s; margin-bottom: 10px;}
+        /* Input & Error Styling */
+        .input-group { margin: 8px 0; position: relative; }
+        input { width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--input-bg); color:var(--accent); font-weight: bold; outline: none; box-sizing: border-box; transition: 0.3s;}
+        input::placeholder { color: #555; font-weight: normal; }
         
+        /* Error State */
         input.error-border { border-color: var(--red) !important; }
-        .error-msg { color: var(--red); font-size: 12px; margin-top: -5px; margin-bottom: 10px; display: none; font-weight: 500; text-align: center;}
+        .error-msg { color: var(--red); font-size: 12px; margin-top: 4px; display: none; font-weight: 500; }
 
-        .btn { display: flex; align-items: center; justify-content: center; gap: 10px; background:var(--blue); color:white; border:none; width:100%; padding:15px; border-radius:12px; cursor:pointer; font-weight:bold;}
+        .btn { display: flex; align-items: center; justify-content: center; gap: 10px; background:var(--blue); color:white; border:none; width:100%; padding:15px; border-radius:12px; cursor:pointer; font-weight:bold; margin-top:12px;}
 
         .logout-btn { position:absolute; top:15px; left:15px; background:var(--red); color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:11px; font-weight:bold; display: flex; align-items: center; gap: 5px; z-index: 10;}
         
@@ -43,7 +47,7 @@
         #toast { 
             visibility:hidden; position:fixed; bottom:30px; left:50%; transform:translateX(-50%); 
             background:var(--blue); color:white; padding:12px 25px; border-radius:50px; 
-            font-weight:bold; z-index:100;
+            font-weight:bold; z-index:100; display: flex; align-items: center; gap: 10px;
         }
         #toast.show { visibility:visible; animation: pop 0.3s ease; }
         @keyframes pop { from {bottom: 0; opacity:0;} to {bottom: 30px; opacity:1;} }
@@ -53,17 +57,22 @@
 </head>
 <body>
 
-<div id="toast">Done!</div>
+<div id="toast">
+    <span id="toastText">Done!</span>
+    <img src="remove.png" id="toastIcon" style="display:none; width:20px;">
+</div>
 
 <div id="loginBox" class="box hidden">
     <div class="header-section">
         <img src="sun.png" id="themeIconLogin" class="theme-toggle" onclick="toggleTheme()">
         <img src="logo.png" class="logo-img">
     </div>
-    <h2 style="text-align:center; margin-bottom: 20px;">Admin Login</h2>
+    <h2 style="text-align:center; margin:0; margin-bottom: 10px;">Admin Login</h2>
     
-    <input type="password" id="pass" placeholder="Enter Admin Password" oninput="resetError()">
-    <div id="loginError" class="error-msg">Incorrect Password!</div>
+    <div class="input-group">
+        <input type="password" id="pass" placeholder="Enter Password" oninput="resetError()">
+        <div id="loginError" class="error-msg">Please enter a password!</div>
+    </div>
 
     <button class="btn" onclick="login()">
         <img src="login.png" style="width:20px;"> Login
@@ -78,7 +87,7 @@
     <div class="header-section">
         <img src="sun.png" id="themeIconPanel" class="theme-toggle" onclick="toggleTheme()">
         <img src="logo.png" class="logo-img">
-        <h3 style="margin-top:10px; color:var(--blue);">TALHA ADMIN PANEL</h3>
+        <h3 style="margin:10px 0 0; color:var(--blue); text-transform: uppercase;">TALHA ADMIN PANEL</h3>
     </div>
 
     <input type="text" id="n" placeholder="User Name">
@@ -88,7 +97,7 @@
     </button>
 
     <div class="search-container">
-        <img src="search.png" class="search-main-icon">
+        <img src="search.png" id="searchIcon" class="search-main-icon">
         <input type="text" id="s" placeholder="Search Users..." onkeyup="search()">
     </div>
     
@@ -96,28 +105,55 @@
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA-0HnHv6SF49HCrfFuURn8t442s_p59Ls",
-  authDomain: "talha-admin-panel.firebaseapp.com",
-  projectId: "talha-admin-panel",
-  databaseURL: "https://talha-admin-panel-default-rtdb.firebaseio.com",
-  storageBucket: "talha-admin-panel.firebasestorage.app",
-  messagingSenderId: "275384033991",
-  appId: "1:275384033991:web:c10b0605d1755d6f9d14e2"
+const firebaseConfig = { 
+    apiKey:"AIzaSyA-0HnHv6SF49HCrfFuURn8t442s_p59Ls",
+    authDomain:"talha-admin-panel.firebaseapp.com",
+    projectId:"talha-admin-panel",
+    databaseURL:"https://talha-admin-panel-default-rtdb.firebaseio.com/"
 };
-
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.database();
+const auth = firebase.auth();
 
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+function applyTheme(theme) {
+    const themeIcon = (theme === 'light') ? 'moon.png' : 'sun.png';
+    const searchIcon = (theme === 'light') ? 'search1.png' : 'search.png';
 
+    if(theme === 'light') {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
+
+    document.getElementById('themeIconLogin').src = themeIcon;
+    document.getElementById('themeIconPanel').src = themeIcon;
+
+    // 🔥 Search icon change according to theme
+    document.getElementById('searchIcon').src = searchIcon;
+}
+
+function toggleTheme() {
+    let current = localStorage.getItem('theme') || 'dark';
+    let newTheme = (current === 'dark') ? 'light' : 'dark';
+    localStorage.setItem('theme', newTheme);
+    applyTheme(newTheme);
+}
+
+function showToast(m, showIcon = false){
+    let t = document.getElementById('toast');
+    document.getElementById('toastText').innerText = m;
+    document.getElementById('toastIcon').style.display = showIcon ? "block" : "none";
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Login Logic with Red Border & Text Error
 function login(){
-    let email = "jafarabbask0@gmail.com"; 
+    let email="jafarabbask0@gmail.com"; 
     let passInput = document.getElementById('pass');
     let errorMsg = document.getElementById('loginError');
     let passValue = passInput.value;
@@ -128,89 +164,81 @@ function login(){
         return;
     }
 
-    auth.signInWithEmailAndPassword(email, passValue)
-    .then(() => {
-        showToast("Welcome Admin!");
-    })
-    .catch((error) => {
-        passInput.classList.add('error-border');
-        errorMsg.innerText = "Wrong Password!";
-        errorMsg.style.display = "block";
-        showToast("Access Denied");
+    auth.signInWithEmailAndPassword(email, passValue).catch(() => {
+        showToast("Wrong Password");
     });
 }
 
-function logout() {
-    // Alert hata diya
-    auth.signOut().then(() => {
-        location.reload();
-    });
+function resetError() {
+    let passInput = document.getElementById('pass');
+    let errorMsg = document.getElementById('loginError');
+    passInput.classList.remove('error-border');
+    errorMsg.style.display = "none";
 }
 
-auth.onAuthStateChanged((user) => {
-    if (user) {
+function logout(){
+    auth.signOut().then(() => showToast("Logged Out"));
+}
+
+auth.onAuthStateChanged(user=>{
+    if(user){
         document.getElementById('loginBox').classList.add('hidden');
         document.getElementById('panelBox').classList.remove('hidden');
         loadData();
     } else {
-        document.getElementById('loginBox').classList.remove('hidden');
         document.getElementById('panelBox').classList.add('hidden');
+        document.getElementById('loginBox').classList.remove('hidden');
+        resetError();
     }
 });
 
-function resetError() {
-    document.getElementById('pass').classList.remove('error-border');
-    document.getElementById('loginError').style.display = "none";
-}
-
 function add(){
-    let n = document.getElementById('n').value;
-    let i = document.getElementById('i').value.trim();
-    if(n && i){
-        db.ref('users').push({ name: n, id: i, date: new Date().toLocaleDateString() })
-        .then(()=>{ showToast("User Added!"); document.getElementById('n').value=""; document.getElementById('i').value=""; });
+    let nInput = document.getElementById('n');
+    let iInput = document.getElementById('i');
+    let nameVal = nInput.value;
+    let idVal = iInput.value.replace(/\s/g, ''); 
+
+    if(nameVal && idVal){
+        db.ref('users').push({
+            name: nameVal, 
+            id: idVal,
+            date: new Date().toLocaleDateString(),
+            status: "active"
+        }).then(()=>{
+            showToast("User Added!");
+            nInput.value=""; iInput.value="";
+        });
+    } else {
+        showToast("Fill in the details!");
     }
 }
 
 function loadData(){
-    db.ref('users').on('value', snapshot => {
-        let h = "";
-        snapshot.forEach(c => {
-            let v = c.val();
-            h += `<div class="user-card">
-                <span><b>${v.name}</b><br><small>${v.id}</small></span>
-                <button class="del-btn" onclick="del('${c.key}')"><img src="delete.png" style="width:12px;"> Delete</button>
+    db.ref('users').on('value',s=>{
+        let h="";
+        s.forEach(c=>{
+            let v=c.val();
+            h+=`<div class="user-card">
+                <span><b>${v.name}</b><br><small style="opacity:0.7;">${v.id}</small></span>
+                <button class="del-btn" onclick="del('${c.key}', '${v.name}')">
+                    <img src="delete.png" style="width:12px;"> Delete
+                </button>
             </div>`;
         });
-        document.getElementById('list').innerHTML = h || "<p style='text-align:center;opacity:0.5'>List Empty</p>";
+        document.getElementById('list').innerHTML = h || "<p style='text-align:center;opacity:0.5'>Empty List</p>";
     });
 }
 
-function del(key){
-    // Alert hata diya
-    db.ref('users').child(key).remove().then(() => showToast("Removed!"));
-}
-
 function search(){
-    let v = document.getElementById('s').value.toLowerCase();
-    document.querySelectorAll('.user-card').forEach(u => u.style.display = u.innerText.toLowerCase().includes(v) ? "flex" : "none");
+    let v=document.getElementById('s').value.toLowerCase();
+    document.querySelectorAll('.user-card').forEach(u=>u.style.display=u.innerText.toLowerCase().includes(v)?"flex":"none");
 }
 
-function showToast(m){
-    let t = document.getElementById('toast');
-    t.innerText = m;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
+function del(k, name){
+    db.ref('users').child(k).remove().then(()=>showToast(name + " removed!", true));
 }
 
-function toggleTheme() {
-    let isLight = document.body.classList.toggle('light-mode');
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
-}
-
-window.onload = () => { 
-    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode'); 
-};
+window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
 </script>
 </body>
 </html>
