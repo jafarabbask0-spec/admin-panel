@@ -110,10 +110,10 @@
 
 <script>
 const firebaseConfig = { 
-    apiKey:"AIzaSyA-0HnHv6SF49HCrfFuURn8t442s_p59Ls",
-    authDomain:"talha-admin-panel.firebaseapp.com",
-    projectId:"talha-admin-panel",
-    databaseURL:"https://talha-admin-panel-default-rtdb.firebaseio.com/"
+    apiKey:"AIzaSyBLOCe015VG41T64XM4POhSdiEIJi9A1yU",
+    authDomain:"http://talha-trader-admin-panel-6f010.firebaseapp.com",
+    projectId:"talha-trader-admin-panel-6f010",
+    databaseURL:"http://talha-trader-admin-panel-6f010.firebasestorage.app"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -153,7 +153,7 @@ function showToast(m, showIcon = false){
 
 // Login Logic with Red Border & Text Error
 function login(){
-    let email="jafarabbask0@gmail.com"; 
+    let email="tt45578885@gmail.com"; 
     let passInput = document.getElementById('pass');
     let errorMsg = document.getElementById('loginError');
     let passValue = passInput.value;
@@ -209,7 +209,7 @@ function add(){
             nInput.value=""; iInput.value="";
         });
     } else {
-        showToast("Fill in the details!");
+        showToast("Details bharein!");
     }
 }
 
